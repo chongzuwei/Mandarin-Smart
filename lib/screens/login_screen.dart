@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'auth/register_screen.dart';
 import '../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -616,7 +617,11 @@ class _LoginScreenState extends State<LoginScreen>
         GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
-            // Navigate to sign up
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const RegisterScreen(),
+              ),
+            );
           },
           child: Text(
             'Sign Up',
