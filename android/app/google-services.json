@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "744256673317",
+    "project_id": "map-mandarin-smart",
+    "storage_bucket": "map-mandarin-smart.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:744256673317:android:f1df264588a096960e51cc",
+        "android_client_info": {
+          "package_name": "com.mandarinsmart.mandarin_smart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrgIgWqmisXe63zH54OQyinC86F0Gpl1o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
