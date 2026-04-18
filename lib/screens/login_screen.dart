@@ -145,38 +145,31 @@ class _LoginScreenState extends State<LoginScreen>
             SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: SizedBox(
-                  height: size.height -
-                      MediaQuery.of(context).padding.top -
-                      MediaQuery.of(context).padding.bottom,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Column(
-                        children: [
-                          const Spacer(flex: 2),
-                          _buildLogo(),
-                          const SizedBox(height: 12),
-                          _buildTitle(),
-                          const SizedBox(height: 8),
-                          _buildSubtitle(),
-                          const Spacer(flex: 2),
-                          _buildLoginForm(),
-                          const SizedBox(height: 16),
-                          _buildRememberAndForgot(),
-                          const SizedBox(height: 24),
-                          _buildLoginButton(),
-                          const SizedBox(height: 20),
-                          _buildDivider(),
-                          const SizedBox(height: 20),
-                          _buildSocialLogin(),
-                          const Spacer(flex: 1),
-                          _buildSignUpLink(),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
+                padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      children: [
+                        _buildLogo(),
+                        const SizedBox(height: 12),
+                        _buildTitle(),
+                        const SizedBox(height: 8),
+                        _buildSubtitle(),
+                        const SizedBox(height: 32),
+                        _buildLoginForm(),
+                        const SizedBox(height: 16),
+                        _buildRememberAndForgot(),
+                        const SizedBox(height: 24),
+                        _buildLoginButton(),
+                        const SizedBox(height: 20),
+                        _buildDivider(),
+                        const SizedBox(height: 20),
+                        _buildSocialLogin(),
+                        const SizedBox(height: 24),
+                        _buildSignUpLink(),
+                      ],
                     ),
                   ),
                 ),
