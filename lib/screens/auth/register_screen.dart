@@ -88,7 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             'Account created successfully. Please sign in.',
             style: AppTheme.bodyMedium.copyWith(color: Colors.white),
           ),
-          backgroundColor: AppTheme.primaryRed,
+          backgroundColor: AppTheme.accentGold,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -133,11 +133,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusFull),
                           onTap: () => Navigator.of(context).pop(),
                           child: const Padding(
                             padding: EdgeInsets.all(8),
-                            child: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                            child: Icon(Icons.arrow_back_ios_new,
+                                color: Colors.white, size: 18),
                           ),
                         ),
                       ),
@@ -146,12 +148,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 12),
                   Text(
                     'Create Account',
-                    style: AppTheme.headingLarge.copyWith(color: AppTheme.textPrimary),
+                    style: AppTheme.headingLarge
+                        .copyWith(color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Join MandarinSmart and start learning with your club.',
-                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+                    style: AppTheme.bodyMedium
+                        .copyWith(color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 28),
                   _buildTextField(
@@ -205,12 +209,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter your password';
+                      if (value.length < 6) return 'Password must be at least 6 characters';
+                      if (!RegExp(r'[0-9]').hasMatch(value)) return 'Password must include a digit';
+                      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) { return 'Password must include a special character';}
                       return null;
                     },
                   ),
@@ -281,7 +283,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: AppTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusLg),
                             boxShadow: AppTheme.primaryShadow,
                           ),
                           child: Center(
@@ -363,14 +366,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         validator: validator,
         style: AppTheme.bodyLarge.copyWith(color: AppTheme.textPrimary),
         cursorColor: AppTheme.primaryRed,
+        maxLines: 1,
+        minLines: 1,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
           prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          errorStyle: AppTheme.bodySmall.copyWith(color: AppTheme.primaryRedLight),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          errorStyle: AppTheme.bodySmall.copyWith(
+            color: AppTheme.primaryRedLight,
+            overflow: TextOverflow.visible,
+          ),
+          errorMaxLines: 2,
         ),
       ),
     );
@@ -417,7 +427,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               padding: const EdgeInsets.only(top: 10),
               child: Text(
                 'Please select a role',
-                style: AppTheme.bodySmall.copyWith(color: AppTheme.primaryRedLight),
+                style: AppTheme.bodySmall
+                    .copyWith(color: AppTheme.primaryRedLight),
               ),
             ),
         ],
@@ -440,7 +451,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          gradient: isSelected ? AppTheme.primaryGradient : AppTheme.cardGradient,
+          gradient:
+              isSelected ? AppTheme.primaryGradient : AppTheme.cardGradient,
           border: Border.all(
             color: isSelected
                 ? Colors.transparent
