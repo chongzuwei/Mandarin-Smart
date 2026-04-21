@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../screens/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -72,45 +72,94 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     HapticFeedback.mediumImpact();
 
-    try {
-      await _authService.registerWithEmail(
-        fullName: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        role: _selectedRole!,
-      );
+    final result = await _authService.registerWithEmail(
+      fullName: _nameController.text.trim(),
+      email: _emailController.text.trim().toLowerCase(),
+      password: _passwordController.text,
+      role: _selectedRole!,
+    );
 
-      if (!mounted) return;
+    setState(() => _isLoading = false);
 
+    if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Account created successfully. Please sign in.',
-            style: AppTheme.bodyMedium.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppTheme.accentGold,
-          behavior: SnackBarBehavior.floating,
+          content: Text(result),
+          backgroundColor: Colors.red,
         ),
       );
-
-      Navigator.of(context).pop();
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Unable to create account. Please try again.',
-            style: AppTheme.bodyMedium.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppTheme.primaryRedDark,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      return;
     }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: Colors.white,
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 60,
+              ),
+              SizedBox(width: 12),
+              Text(
+                "Registration Successful",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            "A verification email has been sent. Please check your inbox or spam folder before logging in.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppTheme.textDark,
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: true).pop();
+
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
+                },
+                child: const Text(
+                  "OK",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -209,11 +258,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter your password';
-                      if (value.length < 6) return 'Password must be at least 6 characters';
-                      if (!RegExp(r'[0-9]').hasMatch(value)) return 'Password must include a digit';
-                      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) { return 'Password must include a special character';}
-                      return null;
+                      final errors = <String>[];
+
+                      if (value == null || value.isEmpty)
+                        return 'Please enter your password';
+                      if (value.length < 6) {
+                        errors.add('Password must be at least 6 characters');
+                      }
+                      if (!RegExp(r'[0-9]').hasMatch(value)) {
+                        errors.add('Password must include a digit');
+                      }
+                      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                        errors.add('Password must include a special character');
+                      }
+
+                      if (errors.isEmpty) return null;
+
+                      return errors.join('\n');
                     },
                   ),
                   const SizedBox(height: 14),

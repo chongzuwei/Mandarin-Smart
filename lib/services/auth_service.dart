@@ -1,3 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum UserRole {
   committee,
   student,
@@ -6,16 +9,12 @@ enum UserRole {
 class AuthService {
   const AuthService();
 
-  /// Placeholder implementation for account creation.
-  /// Replace with Firebase/Auth API integration when backend is ready.
-  Future<void> registerWithEmail({
+  Future<String?> registerWithEmail({
     required String fullName,
     required String email,
     required String password,
     required UserRole role,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 1200));
-  /*
     try {
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -25,17 +24,52 @@ class AuthService {
 
       final user = credential.user;
 
-      if (user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'name': fullName,
-          'email': email,
-          'role': role.name,
-        },
-        SetOptions(merge: true));
+      if (user == null) {
+        return "Registration failed. Please try again.";
+      }
+
+      await user.sendEmailVerification();
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'name': fullName,
+        'email': email,
+        'role': role.name,
+        'roleIndex': role.index,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      return null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        return "This email is already registered. Please sign in instead.";
+      }
+
+      return e.message;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> checkEmailVerified() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) return "No user found";
+
+      await user.reload();
+
+      if (user.emailVerified) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({'isVerified': true});
+
+        return null;
+      } else {
+        return "Email not verified yet";
       }
     } catch (e) {
-      rethrow;
+      return e.toString();
     }
-    */
   }
 }
