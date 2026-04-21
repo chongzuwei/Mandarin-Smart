@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'auth/register_screen.dart';
 import '../theme/app_theme.dart';
+import 'auth/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -441,6 +442,11 @@ class _LoginScreenState extends State<LoginScreen>
         GestureDetector(
           onTap: () {
             // Navigate to forgot password
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ForgotPasswordScreen(),
+              ),
+            );
           },
           child: Text(
             'Forgot password?',
