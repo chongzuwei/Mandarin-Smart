@@ -23,6 +23,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _loading = false);
 
+    if (!mounted) return;
+
     if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

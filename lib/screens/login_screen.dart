@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'auth/register_screen.dart';
 import '../theme/app_theme.dart';
 import 'auth/forgot_password_screen.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -110,20 +111,9 @@ class _LoginScreenState extends State<LoginScreen>
     if (mounted) {
       setState(() => _isLoading = false);
 
-      // Show success (replace with actual navigation)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Welcome to MandarinSmart! 🎉',
-            style: AppTheme.bodyMedium.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppTheme.primaryRed,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
+      // Navigate to dashboard
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
       );
     }
   }
