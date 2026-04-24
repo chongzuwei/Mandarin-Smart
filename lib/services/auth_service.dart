@@ -88,4 +88,46 @@ class AuthService {
       return e.toString();
     }
   }
+
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (docSnapshot.exists) {
+        return docSnapshot.data();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<String?> updateUserProfile({
+    required String name,
+    required String phoneNumber,
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return "No user found";
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'name': name,
+        'phoneNumber': phoneNumber,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 }

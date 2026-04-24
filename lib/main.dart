@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -14,7 +15,14 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  await Firebase.initializeApp();
+  
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+    // Continue anyway - Firebase may not be available on web
+  }
+  
   runApp(const MandarinSmartApp());
 }
 

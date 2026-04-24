@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
-import '../../screens/login_screen.dart';
+import '../dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -81,6 +81,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = false);
 
+    if (!mounted) return;
+
     if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -90,6 +92,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -144,7 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Navigator.of(context, rootNavigator: true).pop();
 
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
                   );
                 },
                 child: const Text(
