@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'auth/register_screen.dart';
-import '../theme/app_theme.dart';
-import 'auth/forgot_password_screen.dart';
-import 'dashboard_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/auth_service.dart';
+import 'register_screen.dart';
+import '../../theme/app_theme.dart';
+import 'forgot_password_screen.dart';
+import '../dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -103,19 +105,182 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    HapticFeedback.mediumImpact();
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    final authService = AuthService();
 
-    if (mounted) {
-      setState(() => _isLoading = false);
+    final error = await authService.loginWithEmail(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
-      // Navigate to dashboard
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-      );
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      if (error == "EMAIL_NOT_VERIFIED") {
+        _showEmailNotVerifiedDialog();
+      } else {
+        _showAuthDialog(
+          title: "Login Failed",
+          message: error,
+          icon: Icons.error_outline,
+          iconColor: Colors.red,
+        );
+      }
+      return;
     }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+    );
+  }
+
+  void _showEmailNotVerifiedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.bgDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.email_outlined,
+              color: Colors.orangeAccent,
+              size: 60,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Email Not Verified",
+              textAlign: TextAlign.center,
+              style: AppTheme.headingMedium.copyWith(
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          "Check your spam inbox to verify your email.\n\nDidn't receive the email?",
+          textAlign: TextAlign.center,
+          style: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Column(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+                child: TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+
+                    final user = FirebaseAuth.instance.currentUser;
+
+                    if (user == null) {
+                      _showAuthDialog(
+                        title: "Error",
+                        message: "Please login first before resending email.",
+                        icon: Icons.error,
+                        iconColor: Colors.red,
+                      );
+                      return;
+                    }
+
+                    final error =
+                        await AuthService().resendVerificationEmailLoggedIn();
+
+                    _showAuthDialog(
+                      title: error == null ? "Email Sent" : "Error",
+                      message: error ??
+                          "Verification email sent successfully. Check your inbox or spam folder.",
+                      icon: error == null ? Icons.check_circle : Icons.error,
+                      iconColor: error == null ? Colors.green : Colors.red,
+                    );
+                  },
+                  child: const Text(
+                    "Resend Email",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Cancel",
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.primaryRed,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAuthDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color iconColor,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.bgDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: iconColor, size: 60),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTheme.headingMedium.copyWith(
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "OK",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -151,14 +316,10 @@ class _LoginScreenState extends State<LoginScreen>
                         const SizedBox(height: 32),
                         _buildLoginForm(),
                         const SizedBox(height: 16),
-                        _buildRememberAndForgot(),
+                        _buildForgotPassword(),
                         const SizedBox(height: 24),
                         _buildLoginButton(),
                         const SizedBox(height: 20),
-                        _buildDivider(),
-                        const SizedBox(height: 20),
-                        _buildSocialLogin(),
-                        const SizedBox(height: 24),
                         _buildSignUpLink(),
                       ],
                     ),
@@ -334,9 +495,6 @@ class _LoginScreenState extends State<LoginScreen>
               if (value == null || value.isEmpty) {
                 return 'Please enter your password';
               }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
               return null;
             },
           ),
@@ -372,8 +530,7 @@ class _LoginScreenState extends State<LoginScreen>
         cursorColor: AppTheme.primaryRed,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle:
-              AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
+          hintStyle: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
           prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
@@ -388,50 +545,12 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ── Remember Me & Forgot Password ──────────────────────────────
-  Widget _buildRememberAndForgot() {
+  Widget _buildForgotPassword() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Remember me
         GestureDetector(
           onTap: () {
-            setState(() => _rememberMe = !_rememberMe);
-            HapticFeedback.selectionClick();
-          },
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  gradient:
-                      _rememberMe ? AppTheme.primaryGradient : null,
-                  border: _rememberMe
-                      ? null
-                      : Border.all(
-                          color: AppTheme.textSecondary.withOpacity(0.5),
-                          width: 1.5,
-                        ),
-                ),
-                child: _rememberMe
-                    ? const Icon(Icons.check, size: 14, color: Colors.white)
-                    : null,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Remember me',
-                style: AppTheme.bodySmall
-                    .copyWith(color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-        ),
-        const Spacer(),
-        // Forgot password
-        GestureDetector(
-          onTap: () {
-            // Navigate to forgot password
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const ForgotPasswordScreen(),
@@ -472,120 +591,14 @@ class _LoginScreenState extends State<LoginScreen>
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         strokeWidth: 2.5,
                       ),
                     )
                   : Text(
                       'Sign In',
-                      style: AppTheme.buttonText
-                          .copyWith(color: Colors.white),
+                      style: AppTheme.buttonText.copyWith(color: Colors.white),
                     ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Divider ─────────────────────────────────────────────────────
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  AppTheme.dividerColor,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'or continue with',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondary.withOpacity(0.7),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.dividerColor,
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Social Login ────────────────────────────────────────────────
-  Widget _buildSocialLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildSocialButton(
-          icon: Icons.g_mobiledata_rounded,
-          label: 'Google',
-          iconSize: 28,
-        ),
-        const SizedBox(width: 16),
-        _buildSocialButton(
-          icon: Icons.apple_rounded,
-          label: 'Apple',
-          iconSize: 24,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    double iconSize = 24,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          child: Ink(
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              gradient: AppTheme.cardGradient,
-              border: Border.all(
-                color: Colors.white.withOpacity(0.08),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: AppTheme.textPrimary, size: iconSize),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: AppTheme.labelMedium
-                      .copyWith(color: AppTheme.textPrimary),
-                ),
-              ],
             ),
           ),
         ),
@@ -600,8 +613,7 @@ class _LoginScreenState extends State<LoginScreen>
       children: [
         Text(
           "Don't have an account? ",
-          style:
-              AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
         ),
         GestureDetector(
           onTap: () {
