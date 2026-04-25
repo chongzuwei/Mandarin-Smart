@@ -21,7 +21,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _agreeTerms = false;
   bool _isLoading = false;
   UserRole? _selectedRole;
   bool _showRoleError = false;
@@ -46,20 +45,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text(
             'Please select Committee or Student.',
-            style: AppTheme.bodyMedium.copyWith(color: Colors.white),
-          ),
-          backgroundColor: AppTheme.primaryRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (!_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please agree to the terms before continuing.',
             style: AppTheme.bodyMedium.copyWith(color: Colors.white),
           ),
           backgroundColor: AppTheme.primaryRed,
@@ -309,33 +294,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       }
                       return null;
                     },
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Checkbox(
-                        value: _agreeTerms,
-                        activeColor: AppTheme.primaryRed,
-                        side: BorderSide(
-                          color: AppTheme.textSecondary.withOpacity(0.7),
-                        ),
-                        onChanged: (value) {
-                          setState(() => _agreeTerms = value ?? false);
-                        },
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            'I agree to the Terms of Service and Privacy Policy',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 18),
                   SizedBox(
