@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mandarin_smart/screens/auth/login_screen.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
-import '../dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _agreeTerms = false;
   bool _isLoading = false;
   UserRole? _selectedRole;
   bool _showRoleError = false;
@@ -45,6 +46,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text(
             'Please select Committee or Student.',
+            style: AppTheme.bodyMedium.copyWith(color: Colors.white),
+          ),
+          backgroundColor: AppTheme.primaryRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!_agreeTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please agree to the terms before continuing.',
             style: AppTheme.bodyMedium.copyWith(color: Colors.white),
           ),
           backgroundColor: AppTheme.primaryRed,
@@ -83,71 +98,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          backgroundColor: Colors.white,
-          title: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 60,
-              ),
-              SizedBox(width: 12),
-              Text(
-                "Registration Successful",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-          content: const Text(
-            "A verification email has been sent. Please check your inbox or spam folder before logging in.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppTheme.textDark,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.bgDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.greenAccent,
+              size: 60,
             ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              ),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                onPressed: () {
-                  Navigator.of(context, rootNavigator: true).pop();
-
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
-                  );
-                },
-                child: const Text(
-                  "OK",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+            const SizedBox(height: 12),
+            Text(
+              "Registration Successful",
+              textAlign: TextAlign.center,
+              style: AppTheme.headingMedium.copyWith(
+                color: AppTheme.textPrimary,
               ),
             ),
           ],
-        );
-      },
+        ),
+        content: Text(
+          "A verification email has been sent. Please check your inbox or spam folder before logging in.",
+          textAlign: TextAlign.center,
+          style: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text(
+                "OK",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -186,8 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 12),
                   Text(
                     'Create Account',
-                    style: AppTheme.headingLarge
-                        .copyWith(color: AppTheme.textPrimary),
+                    style: AppTheme.headingLarge.copyWith(color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -294,6 +296,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: _agreeTerms,
+                        activeColor: AppTheme.primaryRed,
+                        side: BorderSide(
+                          color: AppTheme.textSecondary.withOpacity(0.7),
+                        ),
+                        onChanged: (value) {
+                          setState(() => _agreeTerms = value ?? false);
+                        },
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            'I agree to the Terms of Service and Privacy Policy',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 18),
                   SizedBox(

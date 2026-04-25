@@ -73,6 +73,83 @@ class AuthService {
     }
   }
 
+  Future<String?> loginWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = credential.user;
+
+      if (user == null) {
+        return "Login failed. Please try again.";
+      }
+
+      await user.reload();
+
+      if (!user.emailVerified) {
+        await FirebaseAuth.instance.signOut();
+        return "EMAIL_NOT_VERIFIED";
+      }
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists) {
+        await FirebaseAuth.instance.signOut();
+        return "User profile not found. Please register again.";
+      }
+
+      return null;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          return "No account found with this email.";
+
+        case 'wrong-password':
+        case 'invalid-credential':
+          return "Incorrect email or password.";
+
+        case 'invalid-email':
+          return "Invalid email format.";
+
+        case 'too-many-requests':
+          return "Too many attempts. Try again later.";
+
+        default:
+          return "Login failed. Please try again.";
+      }
+    } catch (e) {
+      return "Unexpected error occurred.";
+    }
+  }
+
+  Future<String?> resendVerificationEmailLoggedIn() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return "No user logged in.";
+      }
+
+      if (user.emailVerified) {
+        return "Email already verified.";
+      }
+
+      await user.sendEmailVerification();
+
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   Future<String?> sendPasswordResetEmail(String email) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(
