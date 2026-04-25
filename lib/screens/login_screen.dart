@@ -154,10 +154,6 @@ class _LoginScreenState extends State<LoginScreen>
                         _buildRememberAndForgot(),
                         const SizedBox(height: 24),
                         _buildLoginButton(),
-                        const SizedBox(height: 20),
-                        _buildDivider(),
-                        const SizedBox(height: 20),
-                        _buildSocialLogin(),
                         const SizedBox(height: 24),
                         _buildSignUpLink(),
                       ],
@@ -482,110 +478,6 @@ class _LoginScreenState extends State<LoginScreen>
                       style: AppTheme.buttonText
                           .copyWith(color: Colors.white),
                     ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Divider ─────────────────────────────────────────────────────
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  AppTheme.dividerColor,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'or continue with',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondary.withOpacity(0.7),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.dividerColor,
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Social Login ────────────────────────────────────────────────
-  Widget _buildSocialLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildSocialButton(
-          icon: Icons.g_mobiledata_rounded,
-          label: 'Google',
-          iconSize: 28,
-        ),
-        const SizedBox(width: 16),
-        _buildSocialButton(
-          icon: Icons.apple_rounded,
-          label: 'Apple',
-          iconSize: 24,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    double iconSize = 24,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-          },
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          child: Ink(
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              gradient: AppTheme.cardGradient,
-              border: Border.all(
-                color: Colors.white.withOpacity(0.08),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: AppTheme.textPrimary, size: iconSize),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: AppTheme.labelMedium
-                      .copyWith(color: AppTheme.textPrimary),
-                ),
-              ],
             ),
           ),
         ),
