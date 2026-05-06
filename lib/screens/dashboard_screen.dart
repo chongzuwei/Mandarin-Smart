@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'profile_screen.dart';
 import 'auth/login_screen.dart';
+import 'attendance_qr_screen.dart';
+import 'events/event_management_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -11,6 +14,14 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  late final Future<Map<String, dynamic>?> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = const AuthService().getUserProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,56 +30,182 @@ class _DashboardScreenState extends State<DashboardScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(gradient: AppTheme.bgGradient),
         child: SafeArea(
-          child: Stack(
-            children: [
-              // Main content area (empty for now)
-              Column(
+          child: FutureBuilder<Map<String, dynamic>?>(
+            future: _profileFuture,
+            builder: (context, snapshot) {
+              final profile = snapshot.data;
+              final role = (profile?['role'] ?? '').toString().toLowerCase();
+              final isCommittee = role == 'committee';
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                );
+              }
+
+              return Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Dashboard',
-                          style: AppTheme.headingLarge
-                              .copyWith(color: AppTheme.textPrimary),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dashboard',
+                              style: AppTheme.headingLarge.copyWith(
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isCommittee
+                                  ? 'Committee attendance tools'
+                                  : 'Student attendance view',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
-                        // Profile dropdown menu
                         _buildProfileMenu(),
                       ],
                     ),
                   ),
-                  // Empty content area
                   Expanded(
-                    child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Icon(
-                            Icons.dashboard_outlined,
-                            size: 80,
-                            color: AppTheme.textSecondary.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Welcome to MandarinSmart',
-                            style: AppTheme.headingMedium.copyWith(
-                              color: AppTheme.textSecondary,
+                          _buildHeroCard(isCommittee: isCommittee),
+                          const SizedBox(height: 20),
+                          if (isCommittee) ...[
+                            _buildActionCard(
+                              title: 'Manage Events',
+                              description:
+                                  'Create, update, and delete events used by attendance QR sessions.',
+                              icon: Icons.event_rounded,
+                              onTap: _openEventManagementScreen,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'More features coming soon',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textSecondary.withOpacity(0.7),
-                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          _buildActionCard(
+                            title: isCommittee
+                                ? 'Generate Attendance QR'
+                                : 'Attendance QR',
+                            description: isCommittee
+                                ? 'Create a fresh QR code for students to scan and record attendance.'
+                                : 'Ask a committee member for the live attendance QR code.',
+                            icon: isCommittee
+                                ? Icons.qr_code_2_rounded
+                                : Icons.qr_code_scanner_rounded,
+                            onTap: isCommittee ? _openAttendanceQrScreen : () {},
                           ),
                         ],
                       ),
                     ),
                   ),
                 ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroCard({required bool isCommittee}) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: AppTheme.cardGradient,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isCommittee ? Icons.verified_user_rounded : Icons.school_rounded,
+            color: AppTheme.primaryRedLight,
+            size: 34,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            isCommittee ? 'Committee controls' : 'Student access',
+            style: AppTheme.headingMedium.copyWith(color: AppTheme.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isCommittee
+                ? 'Generate and share the attendance QR from here.'
+                : 'View attendance tools and wait for the active QR session.',
+            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCard({
+    required String title,
+    required String description,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: AppTheme.cardGradient,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryRed.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+                child: Icon(icon, color: AppTheme.primaryRedLight, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTheme.headingSmall.copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      description,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                size: 16,
               ),
             ],
           ),
@@ -121,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: AppTheme.primaryRed.withOpacity(0.5),
+            color: AppTheme.primaryRed.withValues(alpha: 0.5),
             width: 2,
           ),
         ),
@@ -178,6 +315,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _openAttendanceQrScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AttendanceQrScreen()),
+    );
+  }
+
+  void _openEventManagementScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EventManagementScreen()),
     );
   }
 }
