@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import 'profile_screen.dart';
 import 'auth/login_screen.dart';
 import 'attendance_qr_screen.dart';
+import 'scan_qr_screen.dart';
 import 'events/event_management_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -104,7 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             icon: isCommittee
                                 ? Icons.qr_code_2_rounded
                                 : Icons.qr_code_scanner_rounded,
-                            onTap: isCommittee ? _openAttendanceQrScreen : () {},
+                            onTap: isCommittee ? _openAttendanceQrScreen : _openScanQrScreen,
                           ),
                         ],
                       ),
@@ -321,6 +322,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _openAttendanceQrScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const AttendanceQrScreen()),
+    );
+  }
+
+  void _openScanQrScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ScanQrScreen()),
     );
   }
 
