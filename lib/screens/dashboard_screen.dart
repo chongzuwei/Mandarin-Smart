@@ -6,6 +6,8 @@ import 'auth/login_screen.dart';
 import 'attendance_qr_screen.dart';
 import 'scan_qr_screen.dart';
 import 'events/event_management_screen.dart';
+import 'events/event_registration_screen.dart';
+import 'events/registered_events_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -95,6 +97,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(height: 16),
                           ],
+                          if (!isCommittee) ...[
+                            _buildActionCard(
+                              title: 'Register Events',
+                              description:
+                                  'Browse upcoming club events and register for participation.',
+                              icon: Icons.app_registration_rounded,
+                              onTap: _openEventRegistrationScreen,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildActionCard(
+                              title: 'My Registered Events',
+                              description:
+                                  'View your registered events and manage upcoming registrations.',
+                              icon: Icons.event_available_rounded,
+                              onTap: _openRegisteredEventsScreen,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           _buildActionCard(
                             title: isCommittee
                                 ? 'Generate Attendance QR'
@@ -105,7 +125,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             icon: isCommittee
                                 ? Icons.qr_code_2_rounded
                                 : Icons.qr_code_scanner_rounded,
-                            onTap: isCommittee ? _openAttendanceQrScreen : _openScanQrScreen,
+                            onTap: isCommittee
+                                ? _openAttendanceQrScreen
+                                : _openScanQrScreen,
                           ),
                         ],
                       ),
@@ -334,6 +356,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _openEventManagementScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const EventManagementScreen()),
+    );
+  }
+
+  void _openEventRegistrationScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const EventRegistrationScreen(),
+      ),
+    );
+  }
+
+  void _openRegisteredEventsScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const RegisteredEventsScreen(),
+      ),
     );
   }
 }
