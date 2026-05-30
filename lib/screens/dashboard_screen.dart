@@ -145,10 +145,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildHeroCard({required bool isCommittee}) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: AppTheme.cardGradient,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      decoration: AppTheme.buildCardDecoration(
+        borderRadius: AppTheme.radiusLg,
+        shadows: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,10 +187,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: AppTheme.cardGradient,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          decoration: AppTheme.buildCardDecoration(
+            borderRadius: AppTheme.radiusLg,
+            shadows: AppTheme.softShadow,
           ),
           child: Row(
             children: [

@@ -1,5 +1,1 @@
-{
-  "firestore": {
-    "rules": "firestore.rules"
-  }
-}
+{"firestore":{"rules":"firestore.rules"},"flutter":{"platforms":{"android":{"default":{"projectId":"map-mandarin-smart","appId":"1:744256673317:android:f1df264588a096960e51cc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"map-mandarin-smart","configurations":{"android":"1:744256673317:android:f1df264588a096960e51cc","ios":"1:744256673317:ios:b8c1c0dae13e4ebc0e51cc","macos":"1:744256673317:ios:b8c1c0dae13e4ebc0e51cc","web":"1:744256673317:web:774c9210d5a1d9bc0e51cc","windows":"1:744256673317:web:0ee69f59c8f0ca580e51cc"}}}}}}

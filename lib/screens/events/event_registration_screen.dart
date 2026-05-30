@@ -533,6 +533,8 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
         )
         .get();
 
+    if (!mounted) return;
+
     if (existingRegistration.docs.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -550,11 +552,11 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
       'registeredAt': Timestamp.now(),
     });
 
+    if (!mounted) return;
+
     setState(() {
       _registeredEvents.add(eventId);
     });
-
-    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
