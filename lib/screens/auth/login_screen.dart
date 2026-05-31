@@ -351,8 +351,8 @@ class _LoginScreenState extends State<LoginScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.primaryRed.withOpacity(0.25),
-                      AppTheme.primaryRed.withOpacity(0.0),
+                      AppTheme.primaryRed.withValues(alpha: 0.25),
+                      AppTheme.primaryRed.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -369,8 +369,8 @@ class _LoginScreenState extends State<LoginScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.accentGold.withOpacity(0.15),
-                      AppTheme.accentGold.withOpacity(0.0),
+                      AppTheme.accentGold.withValues(alpha: 0.15),
+                      AppTheme.accentGold.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -387,8 +387,8 @@ class _LoginScreenState extends State<LoginScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.primaryRedLight.withOpacity(0.12),
-                      AppTheme.primaryRedLight.withOpacity(0.0),
+                      AppTheme.primaryRedLight.withValues(alpha: 0.12),
+                      AppTheme.primaryRedLight.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -451,53 +451,58 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Login Form ──────────────────────────────────────────────────
   Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          // Email field
-          _buildTextField(
-            controller: _emailController,
-            hint: 'Email address',
-            icon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!value.contains('@')) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          // Password field
-          _buildTextField(
-            controller: _passwordController,
-            hint: 'Password',
-            icon: Icons.lock_outline_rounded,
-            obscureText: _obscurePassword,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: AppTheme.textSecondary,
-                size: 20,
-              ),
-              onPressed: () {
-                setState(() => _obscurePassword = !_obscurePassword);
+    return Container(
+      decoration: AppTheme.buildCardDecoration(
+        borderRadius: AppTheme.radiusXl,
+        shadows: AppTheme.elevatedShadow,
+      ),
+      padding: const EdgeInsets.all(22),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _buildTextField(
+              controller: _emailController,
+              hint: 'Email address',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!value.contains('@')) {
+                  return 'Please enter a valid email';
+                }
+                return null;
               },
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              return null;
-            },
-          ),
-        ],
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _passwordController,
+              hint: 'Password',
+              icon: Icons.lock_outline_rounded,
+              obscureText: _obscurePassword,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() => _obscurePassword = !_obscurePassword);
+                },
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -511,15 +516,8 @@ class _LoginScreenState extends State<LoginScreen>
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        gradient: AppTheme.cardGradient,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-          width: 1,
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
@@ -527,17 +525,10 @@ class _LoginScreenState extends State<LoginScreen>
         validator: validator,
         style: AppTheme.bodyLarge.copyWith(color: AppTheme.textPrimary),
         cursorColor: AppTheme.primaryRed,
-        decoration: InputDecoration(
+        decoration: AppTheme.buildInputDecoration(
           hintText: hint,
-          hintStyle: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
           prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 20),
           suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          errorStyle: AppTheme.bodySmall.copyWith(
-            color: AppTheme.primaryRedLight,
-          ),
         ),
       ),
     );
@@ -573,34 +564,27 @@ class _LoginScreenState extends State<LoginScreen>
     return SizedBox(
       width: double.infinity,
       height: 56,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _isLoading ? null : _handleLogin,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          child: Ink(
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              boxShadow: AppTheme.primaryShadow,
-            ),
-            child: Center(
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                  : Text(
-                      'Sign In',
-                      style: AppTheme.buttonText.copyWith(color: Colors.white),
-                    ),
-            ),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           ),
+          elevation: 0,
         ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2.5,
+                ),
+              )
+            : Text(
+                'Sign In',
+                style: AppTheme.buttonText.copyWith(color: Colors.white),
+              ),
       ),
     );
   }

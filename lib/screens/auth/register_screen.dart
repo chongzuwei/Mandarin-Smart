@@ -164,10 +164,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Container(
+              decoration: AppTheme.buildCardDecoration(
+                borderRadius: AppTheme.radiusXl,
+                shadows: AppTheme.elevatedShadow,
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
                     children: [
@@ -251,8 +257,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (value) {
                       final errors = <String>[];
 
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Please enter your password';
+                      }
                       if (value.length < 6) {
                         errors.add('Password must be at least 6 characters');
                       }
@@ -305,7 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         value: _agreeTerms,
                         activeColor: AppTheme.primaryRed,
                         side: BorderSide(
-                          color: AppTheme.textSecondary.withOpacity(0.7),
+                          color: AppTheme.textSecondary.withValues(alpha: 0.7),
                         ),
                         onChanged: (value) {
                           setState(() => _agreeTerms = value ?? false);
@@ -327,39 +334,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 18),
                   SizedBox(
                     height: 54,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                        onTap: _isLoading ? null : _handleRegister,
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusLg),
-                            boxShadow: AppTheme.primaryShadow,
-                          ),
-                          child: Center(
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.4,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : Text(
-                                    'Create Account',
-                                    style: AppTheme.buttonText.copyWith(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleRegister,
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                         ),
+                        elevation: 0,
                       ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'Create Account',
+                              style: AppTheme.buttonText.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -390,8 +389,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -402,15 +402,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        gradient: AppTheme.cardGradient,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-          width: 1,
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
@@ -418,21 +411,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         validator: validator,
         style: AppTheme.bodyLarge.copyWith(color: AppTheme.textPrimary),
         cursorColor: AppTheme.primaryRed,
-        maxLines: 1,
-        minLines: 1,
-        decoration: InputDecoration(
+        decoration: AppTheme.buildInputDecoration(
           hintText: hint,
-          hintStyle: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
           prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 20),
           suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          errorStyle: AppTheme.bodySmall.copyWith(
-            color: AppTheme.primaryRedLight,
-            overflow: TextOverflow.visible,
-          ),
-          errorMaxLines: 2,
         ),
       ),
     );
@@ -441,13 +423,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildRoleSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        gradient: AppTheme.cardGradient,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-          width: 1,
-        ),
+      decoration: AppTheme.buildCardDecoration(
+        borderRadius: AppTheme.radiusLg,
+        shadows: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +486,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           border: Border.all(
             color: isSelected
                 ? Colors.transparent
-                : AppTheme.textSecondary.withOpacity(0.45),
+                : AppTheme.textSecondary.withValues(alpha: 0.45),
           ),
         ),
         child: Center(
