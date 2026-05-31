@@ -326,7 +326,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            AppTheme.textSecondary.withOpacity(0.2),
+                            AppTheme.textSecondary.withValues(alpha: 0.2),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: () {
@@ -381,8 +381,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
               color: enabled
-                  ? AppTheme.primaryRed.withOpacity(0.5)
-                  : AppTheme.textSecondary.withOpacity(0.2),
+                  ? AppTheme.primaryRed.withValues(alpha: 0.5)
+                  : AppTheme.textSecondary.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -399,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon,
                 color: enabled
                     ? AppTheme.primaryRed
-                    : AppTheme.textSecondary.withOpacity(0.5),
+                    : AppTheme.textSecondary.withValues(alpha: 0.5),
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -407,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 vertical: 12,
               ),
               hintStyle: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondary.withOpacity(0.5),
+                color: AppTheme.textSecondary.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -417,7 +417,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             helperText,
             style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondary.withOpacity(0.6),
+              color: AppTheme.textSecondary.withValues(alpha: 0.6),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -446,7 +446,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
-              color: AppTheme.textSecondary.withOpacity(0.2),
+              color: AppTheme.textSecondary.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -459,7 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Icon(
                   icon,
-                  color: AppTheme.textSecondary.withOpacity(0.5),
+                  color: AppTheme.textSecondary.withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -473,7 +473,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icon(
                   Icons.lock,
                   size: 18,
-                  color: AppTheme.textSecondary.withOpacity(0.5),
+                  color: AppTheme.textSecondary.withValues(alpha: 0.5),
                 ),
               ],
             ),
@@ -483,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           'Cannot be changed',
           style: AppTheme.bodySmall.copyWith(
-            color: AppTheme.textSecondary.withOpacity(0.6),
+            color: AppTheme.textSecondary.withValues(alpha: 0.6),
             fontStyle: FontStyle.italic,
           ),
         ),
