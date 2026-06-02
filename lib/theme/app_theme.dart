@@ -22,18 +22,31 @@ class AppTheme {
   static const Color infoBlueDark = Color(0xFF1565C0);
 
   // ── Neutrals ──────────────────────────────────────────────────
-  static const Color bgDark = Color(0xFFF7FBFD);
-  static const Color bgDarkAlt = Color(0xFFEEF6FA);
-  static const Color surfaceDark = Color(0xFFE8F4F7);
-  static const Color surfaceLight = Color(0xFFFDFEFF);
-  static const Color textPrimary = Color(0xFF111E30);
-  static const Color textSecondary = Color(0xFF4E657D);
-  static const Color textTertiary = Color(0xFF8094A9);
-  static const Color textDark = Color(0xFF09141F);
-  static const Color textDarkSecondary = Color(0xFF5B7084);
-  static const Color dividerColor = Color(0xFFD4E5EE);
-  static const Color dividerColorLight = Color(0xFFE6F0F6);
+  // LIGHT MODE
+  static const Color bgLight = Color(0xFFF7FBFD);
+  static const Color bgLightAlt = Color(0xFFEEF6FA);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color surfaceLightAlt = Color(0xFFF4FBFE);
 
+  static const Color textLightPrimary = Color(0xFF111E30);
+  static const Color textLightSecondary = Color(0xFF4E657D);
+  static const Color textLightTertiary = Color(0xFF8094A9);
+
+// DARK MODE
+  static const Color bgDark = Color(0xFF0F1720);
+  static const Color bgDarkAlt = Color(0xFF16202B);
+  static const Color surfaceDark = Color(0xFF1D2936);
+  static const Color surfaceDarkAlt = Color(0xFF263545);
+
+  static const Color textDarkPrimary = Color(0xFFFFFFFF);
+  static const Color textDarkSecondary = Color(0xFFB8C7D9);
+  static const Color textDarkTertiary = Color(0xFF8A9BB0);
+
+  static const Color dividerColor = Color(0xFFD4E5EE);
+
+  static const Color textPrimary = textLightPrimary;
+  static const Color textSecondary = textLightSecondary;
+  static const Color textTertiary = textLightTertiary;
   // ── Gradients ─────────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -266,66 +279,60 @@ class AppTheme {
           seedColor: primaryRed,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: bgDark,
+        scaffoldBackgroundColor: bgLight,
+        cardColor: surfaceLight,
+        dividerColor: dividerColor,
         textTheme: GoogleFonts.interTextTheme(
-          ThemeData.light().textTheme.apply(
-                bodyColor: textSecondary,
-                displayColor: textPrimary,
-              ),
+          ThemeData.light().textTheme,
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.transparent,
+          backgroundColor: bgLight,
           elevation: 0,
-          iconTheme: const IconThemeData(color: Color(0xFF0D1B2A)),
-          titleTextStyle: const TextStyle(color: Color(0xFF0D1B2A), fontSize: 20, fontWeight: FontWeight.w700),
+          centerTitle: false,
+          iconTheme: const IconThemeData(
+            color: textLightPrimary,
+          ),
+          titleTextStyle: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: textLightPrimary,
+          ),
           systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
         cardTheme: CardThemeData(
           color: surfaceLight,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusLg),
           ),
-          elevation: 0,
-          shadowColor: Colors.black.withValues(alpha: 0.05),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Color(0xFFF7FBFF),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: spacingLg,
-            vertical: spacingMd,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-            borderSide: BorderSide(color: dividerColor.withValues(alpha: 0.45), width: 1.2),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-            borderSide: BorderSide(color: dividerColor.withValues(alpha: 0.35), width: 1.2),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
-            borderSide: const BorderSide(color: primaryRed, width: 2.0),
-          ),
-          hintStyle: bodyMedium.copyWith(color: textTertiary),
-          labelStyle: bodyMedium.copyWith(color: textSecondary),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryRed,
             foregroundColor: Colors.white,
-            textStyle: buttonText,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radiusMd),
             ),
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           ),
         ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: primaryRed,
-            textStyle: bodyMedium.copyWith(fontWeight: FontWeight.w700),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF7FBFF),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+            borderSide: BorderSide(
+              color: dividerColor.withValues(alpha: 0.5),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+            borderSide: const BorderSide(
+              color: primaryRed,
+              width: 2,
+            ),
           ),
         ),
       );
@@ -338,7 +345,61 @@ class AppTheme {
           brightness: Brightness.dark,
         ),
         scaffoldBackgroundColor: bgDark,
-        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+        cardColor: surfaceDark,
+        dividerColor: Colors.white12,
+        textTheme: GoogleFonts.interTextTheme(
+          ThemeData.dark().textTheme,
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: bgDark,
+          elevation: 0,
+          centerTitle: false,
+          iconTheme: const IconThemeData(
+            color: Colors.white,
+          ),
+          titleTextStyle: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
+        cardTheme: CardThemeData(
+          color: surfaceDark,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusLg),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryRed,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(radiusMd),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: surfaceDarkAlt,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+            borderSide: const BorderSide(
+              color: primaryRedLight,
+              width: 2,
+            ),
+          ),
+        ),
       );
 
   // ── Component Helpers ─────────────────────────────────────────
@@ -456,4 +517,3 @@ class AppTheme {
         borderRadius: BorderRadius.circular(radiusSm),
       );
 }
-

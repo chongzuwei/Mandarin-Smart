@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+
 import 'profile_screen.dart';
 import 'auth/login_screen.dart';
+
 import 'attendance_qr_screen.dart';
 import 'scan_qr_screen.dart';
+
 import 'events/event_management_screen.dart';
 import 'events/event_registration_screen.dart';
 import 'events/registered_events_screen.dart';
+
+import 'accessibility_settings_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,109 +37,97 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(gradient: AppTheme.bgGradient),
+        decoration: const BoxDecoration(
+          gradient: AppTheme.bgGradient,
+        ),
         child: SafeArea(
           child: FutureBuilder<Map<String, dynamic>?>(
             future: _profileFuture,
             builder: (context, snapshot) {
               final profile = snapshot.data;
+
               final role = (profile?['role'] ?? '').toString().toLowerCase();
+
               final isCommittee = role == 'committee';
 
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
+                  child: CircularProgressIndicator(),
                 );
               }
 
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: 24),
+                    _buildWelcomeCard(isCommittee),
+                    const SizedBox(height: 24),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount:
+                                                MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.82,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Dashboard',
-                              style: AppTheme.headingLarge.copyWith(
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              isCommittee
-                                  ? 'Committee attendance tools'
-                                  : 'Student attendance view',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
+                        if (isCommittee)
+                          _buildDashboardTile(
+                            title: 'Events',
+                            subtitle: 'Manage events',
+                            icon: Icons.event_rounded,
+                            onTap: _openEventManagementScreen,
+                          )
+                        else
+                          _buildDashboardTile(
+                            title: 'Events',
+                            subtitle: 'Register events',
+                            icon: Icons.event_rounded,
+                            onTap: _openEventRegistrationScreen,
+                          ),
+                        _buildDashboardTile(
+                          title: 'QR Code',
+                          subtitle: isCommittee ? 'Generate QR' : 'Scan QR',
+                          icon: isCommittee
+                              ? Icons.qr_code_2_rounded
+                              : Icons.qr_code_scanner_rounded,
+                          onTap: isCommittee
+                              ? _openAttendanceQrScreen
+                              : _openScanQrScreen,
                         ),
-                        _buildProfileMenu(),
+                        _buildDashboardTile(
+                          title: 'Profile',
+                          subtitle: 'Manage account',
+                          icon: Icons.person_rounded,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ProfileScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        if (isCommittee)
+                          _buildDashboardTile(
+                            title: 'Attendance',
+                            subtitle: 'QR sessions',
+                            icon: Icons.fact_check_rounded,
+                            onTap: _openAttendanceQrScreen,
+                          )
+                        else
+                          _buildDashboardTile(
+                            title: 'Attendance',
+                            subtitle: 'My events',
+                            icon: Icons.event_available_rounded,
+                            onTap: _openRegisteredEventsScreen,
+                          ),
                       ],
                     ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildHeroCard(isCommittee: isCommittee),
-                          const SizedBox(height: 20),
-                          if (isCommittee) ...[
-                            _buildActionCard(
-                              title: 'Manage Events',
-                              description:
-                                  'Create, update, and delete events used by attendance QR sessions.',
-                              icon: Icons.event_rounded,
-                              onTap: _openEventManagementScreen,
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (!isCommittee) ...[
-                            _buildActionCard(
-                              title: 'Register Events',
-                              description:
-                                  'Browse upcoming club events and register for participation.',
-                              icon: Icons.app_registration_rounded,
-                              onTap: _openEventRegistrationScreen,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildActionCard(
-                              title: 'My Registered Events',
-                              description:
-                                  'View your registered events and manage upcoming registrations.',
-                              icon: Icons.event_available_rounded,
-                              onTap: _openRegisteredEventsScreen,
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          _buildActionCard(
-                            title: isCommittee
-                                ? 'Generate Attendance QR'
-                                : 'Attendance QR',
-                            description: isCommittee
-                                ? 'Create a fresh QR code for students to scan and record attendance.'
-                                : 'Ask a committee member for the live attendance QR code.',
-                            icon: isCommittee
-                                ? Icons.qr_code_2_rounded
-                                : Icons.qr_code_scanner_rounded,
-                            onTap: isCommittee
-                                ? _openAttendanceQrScreen
-                                : _openScanQrScreen,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),
@@ -142,91 +136,136 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHeroCard({required bool isCommittee}) {
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Dashboard',
+              style: AppTheme.headingLarge.copyWith(
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Welcome back',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        _buildProfileMenu(),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeCard(bool isCommittee) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: AppTheme.buildCardDecoration(
-        borderRadius: AppTheme.radiusLg,
-        shadows: AppTheme.softShadow,
+        borderRadius: 28,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Icon(
-            isCommittee ? Icons.verified_user_rounded : Icons.school_rounded,
-            color: AppTheme.primaryRedLight,
-            size: 34,
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              isCommittee ? Icons.verified_user_rounded : Icons.school_rounded,
+              color: Colors.white,
+              size: 34,
+            ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            isCommittee ? 'Committee controls' : 'Student access',
-            style: AppTheme.headingMedium.copyWith(color: AppTheme.textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isCommittee
-                ? 'Generate and share the attendance QR from here.'
-                : 'View attendance tools and wait for the active QR session.',
-            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isCommittee ? 'Committee Dashboard' : 'Student Dashboard',
+                  style: AppTheme.headingMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  isCommittee
+                      ? 'Manage events, attendance and club activities.'
+                      : 'Register for events and track your attendance.',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard({
+  Widget _buildDashboardTile({
     required String title,
-    required String description,
+    required String subtitle,
     required IconData icon,
     required VoidCallback onTap,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(20),
           decoration: AppTheme.buildCardDecoration(
-            borderRadius: AppTheme.radiusLg,
-            shadows: AppTheme.softShadow,
+            borderRadius: 24,
           ),
-          child: Row(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryRed.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  color: AppTheme.primaryRed.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: Icon(icon, color: AppTheme.primaryRedLight, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTheme.headingSmall.copyWith(
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      description,
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
+                child: Icon(
+                  icon,
+                  color: AppTheme.primaryRed,
+                  size: 32,
                 ),
               ),
-              const SizedBox(width: 12),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: AppTheme.textSecondary.withValues(alpha: 0.6),
-                size: 16,
+              const SizedBox(height: 16),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.headingSmall.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Flexible(
+                child: Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -237,123 +276,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildProfileMenu() {
     return PopupMenuButton<String>(
-      onSelected: (String value) {
-        if (value == 'profile') {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          );
-        } else if (value == 'logout') {
-          _handleLogout();
+      onSelected: (value) {
+        switch (value) {
+          case 'profile':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ProfileScreen(),
+              ),
+            );
+            break;
+
+          case 'accessibility':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AccessibilitySettingsScreen(),
+              ),
+            );
+            break;
+
+          case 'logout':
+            _handleLogout();
+            break;
         }
       },
-      itemBuilder: (BuildContext context) => [
-        PopupMenuItem<String>(
+      itemBuilder: (_) => [
+        const PopupMenuItem(
           value: 'profile',
-          child: Row(
-            children: [
-              const Icon(Icons.person_outline, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                'Edit Profile',
-                style: AppTheme.bodyMedium,
-              ),
-            ],
-          ),
+          child: Text('Profile'),
+        ),
+        const PopupMenuItem(
+          value: 'accessibility',
+          child: Text('Accessibility'),
         ),
         const PopupMenuDivider(),
-        PopupMenuItem<String>(
+        const PopupMenuItem(
           value: 'logout',
-          child: Row(
-            children: [
-              const Icon(Icons.logout, size: 20, color: AppTheme.primaryRed),
-              const SizedBox(width: 12),
-              Text(
-                'Logout',
-                style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryRed),
-              ),
-            ],
-          ),
+          child: Text('Logout'),
         ),
       ],
       child: Container(
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
             color: AppTheme.primaryRed.withValues(alpha: 0.5),
-            width: 2,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            Icons.person,
-            color: AppTheme.primaryRed,
-            size: 24,
-          ),
+        child: const Icon(
+          Icons.person,
         ),
       ),
     );
   }
 
   void _handleLogout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.bgDark,
-        title: Text(
-          'Logout',
-          style: AppTheme.headingMedium.copyWith(color: AppTheme.textPrimary),
-        ),
-        content: Text(
-          'Are you sure you want to logout?',
-          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryRed),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            ),
-            child: TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const LoginScreen(),
       ),
     );
   }
 
   void _openAttendanceQrScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AttendanceQrScreen()),
+      MaterialPageRoute(
+        builder: (_) => const AttendanceQrScreen(),
+      ),
     );
   }
 
   void _openScanQrScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ScanQrScreen()),
+      MaterialPageRoute(
+        builder: (_) => const ScanQrScreen(),
+      ),
     );
   }
 
   void _openEventManagementScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const EventManagementScreen()),
+      MaterialPageRoute(
+        builder: (_) => const EventManagementScreen(),
+      ),
     );
   }
 
