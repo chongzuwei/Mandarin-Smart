@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
@@ -31,6 +32,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _profileFuture = const AuthService().getUserProfile();
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> _watchUpcomingEvents() {
+    return FirebaseFirestore.instance
+        .collection('events')
+        .where('startAt', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
+        .orderBy('startAt')
+        .limit(5)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> _watchAllEvents() {
+    return FirebaseFirestore.instance.collection('events').snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,91 +57,140 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: SafeArea(
           child: FutureBuilder<Map<String, dynamic>?>(
             future: _profileFuture,
-            builder: (context, snapshot) {
-              final profile = snapshot.data;
-
-              final role = (profile?['role'] ?? '').toString().toLowerCase();
-
-              final isCommittee = role == 'committee';
-
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
+            builder: (context, profileSnapshot) {
+              if (profileSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
               }
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: 24),
-                    _buildWelcomeCard(isCommittee),
-                    const SizedBox(height: 24),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount:
-                                                MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.82,
+              final profile = profileSnapshot.data;
+              final role = (profile?['role'] ?? '').toString().toLowerCase();
+              final name = (profile?['name'] ?? 'User').toString();
+              final isCommittee = role == 'committee';
+
+              return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: _watchAllEvents(),
+                builder: (context, allEventsSnapshot) {
+                  final allEvents = allEventsSnapshot.data?.docs ?? [];
+                  final now = DateTime.now();
+
+                  final upcomingEvents = allEvents.where((doc) {
+                    final data = doc.data();
+                    final timestamp = data['startAt'];
+                    if (timestamp is! Timestamp) return false;
+                    return timestamp.toDate().isAfter(now);
+                  }).toList();
+
+                  final thisWeekEvents = upcomingEvents.where((doc) {
+                    final timestamp = doc.data()['startAt'];
+                    if (timestamp is! Timestamp) return false;
+                    final date = timestamp.toDate();
+                    return date.difference(now).inDays <= 7;
+                  }).length;
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (isCommittee)
-                          _buildDashboardTile(
-                            title: 'Events',
-                            subtitle: 'Manage events',
-                            icon: Icons.event_rounded,
-                            onTap: _openEventManagementScreen,
-                          )
-                        else
-                          _buildDashboardTile(
-                            title: 'Events',
-                            subtitle: 'Register events',
-                            icon: Icons.event_rounded,
-                            onTap: _openEventRegistrationScreen,
-                          ),
-                        _buildDashboardTile(
-                          title: 'QR Code',
-                          subtitle: isCommittee ? 'Generate QR' : 'Scan QR',
-                          icon: isCommittee
-                              ? Icons.qr_code_2_rounded
-                              : Icons.qr_code_scanner_rounded,
-                          onTap: isCommittee
-                              ? _openAttendanceQrScreen
-                              : _openScanQrScreen,
+                        _buildHeader(name),
+                        const SizedBox(height: 24),
+                        _buildWelcomeCard(isCommittee),
+                        const SizedBox(height: 24),
+
+                        _buildKpiSection(
+                          totalEvents: allEvents.length,
+                          upcomingEvents: upcomingEvents.length,
+                          thisWeekEvents: thisWeekEvents,
+                          isCommittee: isCommittee,
                         ),
-                        _buildDashboardTile(
-                          title: 'Profile',
-                          subtitle: 'Manage account',
-                          icon: Icons.person_rounded,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ProfileScreen(),
-                              ),
-                            );
+
+                        const SizedBox(height: 24),
+
+                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          stream: _watchUpcomingEvents(),
+                          builder: (context, eventSnapshot) {
+                            final events = eventSnapshot.data?.docs ?? [];
+
+                            return _buildUpcomingEventSection(events, isCommittee);
                           },
                         ),
-                        if (isCommittee)
-                          _buildDashboardTile(
-                            title: 'Attendance',
-                            subtitle: 'QR sessions',
-                            icon: Icons.fact_check_rounded,
-                            onTap: _openAttendanceQrScreen,
-                          )
-                        else
-                          _buildDashboardTile(
-                            title: 'Attendance',
-                            subtitle: 'My events',
-                            icon: Icons.event_available_rounded,
-                            onTap: _openRegisteredEventsScreen,
+
+                        const SizedBox(height: 24),
+                        _buildAnnouncementSection(isCommittee),
+                        const SizedBox(height: 24),
+
+                        Text(
+                          'Quick Access',
+                          style: AppTheme.headingSmall.copyWith(
+                            color: AppTheme.textPrimary,
                           ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.95,
+                          children: [
+                            if (isCommittee)
+                              _buildDashboardTile(
+                                title: 'Events',
+                                subtitle: 'Manage events',
+                                icon: Icons.event_rounded,
+                                onTap: _openEventManagementScreen,
+                              )
+                            else
+                              _buildDashboardTile(
+                                title: 'Events',
+                                subtitle: 'Register events',
+                                icon: Icons.event_rounded,
+                                onTap: _openEventRegistrationScreen,
+                              ),
+                            _buildDashboardTile(
+                              title: 'QR Code',
+                              subtitle: isCommittee ? 'Generate QR' : 'Scan QR',
+                              icon: isCommittee
+                                  ? Icons.qr_code_2_rounded
+                                  : Icons.qr_code_scanner_rounded,
+                              onTap: isCommittee
+                                  ? _openAttendanceQrScreen
+                                  : _openScanQrScreen,
+                            ),
+                            _buildDashboardTile(
+                              title: 'Profile',
+                              subtitle: 'Manage account',
+                              icon: Icons.person_rounded,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const ProfileScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            if (isCommittee)
+                              _buildDashboardTile(
+                                title: 'Attendance',
+                                subtitle: 'QR sessions',
+                                icon: Icons.fact_check_rounded,
+                                onTap: _openAttendanceQrScreen,
+                              )
+                            else
+                              _buildDashboardTile(
+                                title: 'Attendance',
+                                subtitle: 'My events',
+                                icon: Icons.event_available_rounded,
+                                onTap: _openRegisteredEventsScreen,
+                              ),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           ),
@@ -136,27 +199,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(String name) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Dashboard',
-              style: AppTheme.headingLarge.copyWith(
-                color: AppTheme.textPrimary,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dashboard',
+                style: AppTheme.headingLarge.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Welcome back',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondary,
+              const SizedBox(height: 4),
+              Text(
+                'Welcome back, $name',
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         _buildProfileMenu(),
       ],
@@ -167,9 +233,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: AppTheme.buildCardDecoration(
-        borderRadius: 28,
-      ),
+      decoration: AppTheme.buildCardDecoration(borderRadius: 28),
       child: Row(
         children: [
           Container(
@@ -197,8 +261,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 6),
                 Text(
                   isCommittee
-                      ? 'Manage events, attendance and club activities.'
-                      : 'Register for events and track your attendance.',
+                      ? 'Manage event updates, QR attendance and club activities.'
+                      : 'View upcoming events, updates and track your attendance.',
                   style: AppTheme.bodyMedium.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -209,6 +273,252 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildKpiSection({
+    required int totalEvents,
+    required int upcomingEvents,
+    required int thisWeekEvents,
+    required bool isCommittee,
+  }) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: MediaQuery.of(context).size.width > 700 ? 3 : 2,
+      crossAxisSpacing: 14,
+      mainAxisSpacing: 14,
+      childAspectRatio: 1.45,
+      children: [
+        _buildKpiCard(
+          title: 'Total Events',
+          value: totalEvents.toString(),
+          icon: Icons.event_note_rounded,
+        ),
+        _buildKpiCard(
+          title: 'Upcoming',
+          value: upcomingEvents.toString(),
+          icon: Icons.upcoming_rounded,
+        ),
+        _buildKpiCard(
+          title: 'This Week',
+          value: thisWeekEvents.toString(),
+          icon: Icons.calendar_month_rounded,
+        ),
+        if (!isCommittee)
+          _buildKpiCard(
+            title: 'Attendance',
+            value: 'View',
+            icon: Icons.fact_check_rounded,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildKpiCard({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: AppTheme.buildCardDecoration(borderRadius: 22),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryRed.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: AppTheme.primaryRed),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: AppTheme.headingMedium.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEventSection(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> events,
+    bool isCommittee,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: AppTheme.buildCardDecoration(borderRadius: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle(
+            title: 'Upcoming Events',
+            actionText: isCommittee ? 'Manage' : 'View all',
+            onTap: isCommittee ? _openEventManagementScreen : _openEventRegistrationScreen,
+          ),
+          const SizedBox(height: 16),
+          if (events.isEmpty)
+            Text(
+              'No upcoming events available yet.',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            )
+          else
+            Column(
+              children: events.map((doc) {
+                final data = doc.data();
+                final title = (data['title'] ?? 'Untitled Event').toString();
+                final location = (data['location'] ?? 'No location').toString();
+                final timestamp = data['startAt'];
+                final date = timestamp is Timestamp
+                    ? _formatDate(timestamp.toDate())
+                    : 'No date';
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryRed.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.event_available_rounded,
+                        color: AppTheme.primaryRed,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(title, style: AppTheme.headingSmall),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$date • $location',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementSection(bool isCommittee) {
+    final announcements = isCommittee
+        ? [
+            'Remember to update event details before publishing.',
+            'Check QR attendance sessions after each event.',
+            'Review upcoming activities for this week.',
+          ]
+        : [
+            'New events may be available for registration.',
+            'Use QR Code to scan attendance during events.',
+            'Check your registered events before attending.',
+          ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: AppTheme.buildCardDecoration(borderRadius: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle(title: 'Announcements & Updates'),
+          const SizedBox(height: 14),
+          ...announcements.map(
+            (text) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.campaign_rounded,
+                    size: 20,
+                    color: AppTheme.primaryRed,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle({
+    required String title,
+    String? actionText,
+    VoidCallback? onTap,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: AppTheme.headingSmall),
+        if (actionText != null && onTap != null)
+          TextButton(
+            onPressed: onTap,
+            child: Text(
+              actionText,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.primaryRed,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    return '${date.day} ${months[date.month - 1]} ${date.year}, $hour:$minute';
   }
 
   Widget _buildDashboardTile({
@@ -223,48 +533,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: Container(
-          decoration: AppTheme.buildCardDecoration(
-            borderRadius: 24,
-          ),
+          decoration: AppTheme.buildCardDecoration(borderRadius: 24),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 68,
-                height: 68,
+                width: 58,
+                height: 58,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryRed.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.primaryRed,
-                  size: 32,
-                ),
+                child: Icon(icon, color: AppTheme.primaryRed, size: 28),
               ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: AppTheme.headingSmall.copyWith(
-                    color: AppTheme.textPrimary,
-                  ),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTheme.headingSmall.copyWith(
+                  color: AppTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 6),
-              Flexible(
-                child: Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondary,
                 ),
               ),
             ],
@@ -280,39 +576,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         switch (value) {
           case 'profile':
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
             );
             break;
-
           case 'accessibility':
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const AccessibilitySettingsScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const AccessibilitySettingsScreen()),
             );
             break;
-
           case 'logout':
             _handleLogout();
             break;
         }
       },
-      itemBuilder: (_) => [
-        const PopupMenuItem(
-          value: 'profile',
-          child: Text('Profile'),
-        ),
-        const PopupMenuItem(
-          value: 'accessibility',
-          child: Text('Accessibility'),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'logout',
-          child: Text('Logout'),
-        ),
+      itemBuilder: (_) => const [
+        PopupMenuItem(value: 'profile', child: Text('Profile')),
+        PopupMenuItem(value: 'accessibility', child: Text('Accessibility')),
+        PopupMenuDivider(),
+        PopupMenuItem(value: 'logout', child: Text('Logout')),
       ],
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -322,58 +603,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: AppTheme.primaryRed.withValues(alpha: 0.5),
           ),
         ),
-        child: const Icon(
-          Icons.person,
-        ),
+        child: const Icon(Icons.person),
       ),
     );
   }
 
   void _handleLogout() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 
   void _openAttendanceQrScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const AttendanceQrScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AttendanceQrScreen()),
     );
   }
 
   void _openScanQrScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ScanQrScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const ScanQrScreen()),
     );
   }
 
   void _openEventManagementScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const EventManagementScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const EventManagementScreen()),
     );
   }
 
   void _openEventRegistrationScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const EventRegistrationScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const EventRegistrationScreen()),
     );
   }
 
   void _openRegisteredEventsScreen() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const RegisteredEventsScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const RegisteredEventsScreen()),
     );
   }
 }
