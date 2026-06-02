@@ -1,29 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AccessibilitySettings extends ChangeNotifier {
-  AccessibilitySettings({
-    double textScale = 1.0,
-    ThemeMode themeMode = ThemeMode.dark,
-  })  : _textScale = textScale,
-        _themeMode = themeMode;
-
   double _textScale;
   ThemeMode _themeMode;
 
+  AccessibilitySettings({
+    double textScale = 1.0,
+    ThemeMode themeMode = ThemeMode.system,
+  })  : _textScale = textScale,
+        _themeMode = themeMode;
+
   double get textScale => _textScale;
+
   ThemeMode get themeMode => _themeMode;
 
-  void setTextScale(double value) {
-    final next = value.clamp(0.85, 1.4);
-    if (next == _textScale) return;
-    _textScale = next;
+  Future<void> loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    _textScale = prefs.getDouble('textScale') ?? 1.0;
+
+    final themeIndex = prefs.getInt('themeMode') ?? 0;
+
+    _themeMode = ThemeMode.values[themeIndex];
+
     notifyListeners();
   }
 
-  void setThemeMode(ThemeMode value) {
-    if (value == _themeMode) return;
-    _themeMode = value;
+  Future<void> setTextScale(double value) async {
+    _textScale = value;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setDouble('textScale', value);
+
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt(
+      'themeMode',
+      mode.index,
+    );
+
     notifyListeners();
   }
 }
-
