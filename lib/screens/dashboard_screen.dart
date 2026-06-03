@@ -339,12 +339,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  value,
-                  style: AppTheme.headingMedium.copyWith(
-                    color: AppTheme.textPrimary,
+                Flexible(
+                  child: FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      value,
+                      style: AppTheme.headingMedium.copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   title,
                   overflow: TextOverflow.ellipsis,
@@ -493,7 +500,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: AppTheme.headingSmall),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTheme.headingSmall,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         if (actionText != null && onTap != null)
           TextButton(
             onPressed: onTap,
@@ -536,29 +549,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
           decoration: AppTheme.buildCardDecoration(borderRadius: 24),
           padding: const EdgeInsets.all(20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryRed.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Icon(icon, color: AppTheme.primaryRed, size: 28),
+                child: Icon(icon, color: AppTheme.primaryRed, size: 26),
               ),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: AppTheme.headingSmall.copyWith(
-                  color: AppTheme.textPrimary,
+              const SizedBox(height: 12),
+              Flexible(
+                fit: FlexFit.loose,
+                child: FittedBox(
+                  alignment: Alignment.center,
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: AppTheme.headingSmall.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: AppTheme.bodySmall.copyWith(
                   color: AppTheme.textSecondary,
                 ),
