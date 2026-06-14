@@ -224,8 +224,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        _buildProfileMenu(),
+        Row(
+          children: [
+            _buildNotificationIcon(),
+            const SizedBox(width: 12),
+            _buildProfileMenu(),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildNotificationIcon() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _watchUpcomingEvents(),
+      builder: (context, snapshot) {
+        final events = snapshot.data?.docs ?? [];
+        final count = events.length;
+
+        return GestureDetector(
+          onTap: _openEventRegistrationScreen,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppTheme.primaryRed.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: const Icon(Icons.notifications_none),
+              ),
+              if (count > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryRed,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : count.toString(),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
