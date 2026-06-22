@@ -35,7 +35,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Stream<QuerySnapshot<Map<String, dynamic>>> _watchUpcomingEvents() {
     return FirebaseFirestore.instance
         .collection('events')
-        .where('startAt', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
+        .where('startAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
         .orderBy('startAt')
         .limit(5)
         .snapshots();
@@ -96,29 +97,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 24),
                         _buildWelcomeCard(isCommittee),
                         const SizedBox(height: 24),
-
                         _buildKpiSection(
                           totalEvents: allEvents.length,
                           upcomingEvents: upcomingEvents.length,
                           thisWeekEvents: thisWeekEvents,
                           isCommittee: isCommittee,
                         ),
-
                         const SizedBox(height: 24),
-
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: _watchUpcomingEvents(),
                           builder: (context, eventSnapshot) {
                             final events = eventSnapshot.data?.docs ?? [];
 
-                            return _buildUpcomingEventSection(events, isCommittee);
+                            return _buildUpcomingEventSection(
+                                events, isCommittee);
                           },
                         ),
-
                         const SizedBox(height: 24),
                         _buildAnnouncementSection(isCommittee),
                         const SizedBox(height: 24),
-
                         Text(
                           'Quick Access',
                           style: AppTheme.headingSmall.copyWith(
@@ -126,11 +123,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-
                         GridView.count(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                          crossAxisCount:
+                              MediaQuery.of(context).size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                           childAspectRatio: 0.95,
@@ -242,8 +239,117 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final events = snapshot.data?.docs ?? [];
         final count = events.length;
 
-        return GestureDetector(
-          onTap: _openEventRegistrationScreen,
+        return PopupMenuButton<String>(
+          tooltip: 'Upcoming events',
+          offset: const Offset(0, 52),
+          color: AppTheme.bgDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              enabled: false,
+              child: SizedBox(
+                width: 280,
+                child: Text(
+                  'Upcoming Events',
+                  style: AppTheme.headingSmall.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            const PopupMenuDivider(),
+            if (events.isEmpty)
+              PopupMenuItem<String>(
+                enabled: false,
+                child: SizedBox(
+                  width: 280,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.event_busy_rounded,
+                        color: AppTheme.primaryRed,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'No upcoming events available.',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...events.map((doc) {
+                final data = doc.data();
+                final title = (data['title'] ?? 'Untitled Event').toString();
+                final location = (data['location'] ?? 'No location').toString();
+                final timestamp = data['startAt'];
+                final date = timestamp is Timestamp
+                    ? _formatDate(timestamp.toDate())
+                    : 'No date';
+
+                return PopupMenuItem<String>(
+                  enabled: false,
+                  child: SizedBox(
+                    width: 280,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryRed.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.event_available_rounded,
+                            color: AppTheme.primaryRed,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$date • $location',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+          ],
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -262,7 +368,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   right: -2,
                   top: -2,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryRed,
                       borderRadius: BorderRadius.circular(12),
@@ -435,7 +542,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _sectionTitle(
             title: 'Upcoming Events',
             actionText: isCommittee ? 'Manage' : 'View all',
-            onTap: isCommittee ? _openEventManagementScreen : _openEventRegistrationScreen,
+            onTap: isCommittee
+                ? _openEventManagementScreen
+                : _openEventRegistrationScreen,
           ),
           const SizedBox(height: 16),
           if (events.isEmpty)
@@ -578,8 +687,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
 
     final hour = date.hour.toString().padLeft(2, '0');
@@ -658,7 +777,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             break;
           case 'accessibility':
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AccessibilitySettingsScreen()),
+              MaterialPageRoute(
+                  builder: (_) => const AccessibilitySettingsScreen()),
             );
             break;
           case 'logout':
