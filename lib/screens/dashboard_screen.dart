@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../services/announcement_service.dart';
 import '../theme/app_theme.dart';
 
 import 'profile_screen.dart';
 import 'auth/login_screen.dart';
 
+import 'announcements/announcement_management_screen.dart';
 import 'attendance_qr_screen.dart';
 import 'scan_qr_screen.dart';
 
@@ -24,6 +26,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const AnnouncementService _announcementService = AnnouncementService();
+
   late final Future<Map<String, dynamic>?> _profileFuture;
 
   @override
@@ -35,7 +39,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Stream<QuerySnapshot<Map<String, dynamic>>> _watchUpcomingEvents() {
     return FirebaseFirestore.instance
         .collection('events')
-        .where('startAt', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
+        .where('startAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
         .orderBy('startAt')
         .limit(5)
         .snapshots();
@@ -43,6 +48,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> _watchAllEvents() {
     return FirebaseFirestore.instance.collection('events').snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> _watchActiveAnnouncements() {
+    return _announcementService.watchActiveAnnouncements(limit: 5);
   }
 
   @override
@@ -96,29 +105,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 24),
                         _buildWelcomeCard(isCommittee),
                         const SizedBox(height: 24),
-
                         _buildKpiSection(
                           totalEvents: allEvents.length,
                           upcomingEvents: upcomingEvents.length,
                           thisWeekEvents: thisWeekEvents,
                           isCommittee: isCommittee,
                         ),
-
                         const SizedBox(height: 24),
-
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: _watchUpcomingEvents(),
                           builder: (context, eventSnapshot) {
                             final events = eventSnapshot.data?.docs ?? [];
 
-                            return _buildUpcomingEventSection(events, isCommittee);
+                            return _buildUpcomingEventSection(
+                                events, isCommittee);
                           },
                         ),
-
                         const SizedBox(height: 24),
-                        _buildAnnouncementSection(isCommittee),
-                        const SizedBox(height: 24),
+                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          stream: _watchActiveAnnouncements(),
+                          builder: (context, announcementSnapshot) {
+                            final announcements =
+                                announcementSnapshot.data?.docs ?? [];
 
+                            return _buildAnnouncementSection(
+                              announcements,
+                              isCommittee,
+                              isLoading: announcementSnapshot.connectionState ==
+                                  ConnectionState.waiting,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
                         Text(
                           'Quick Access',
                           style: AppTheme.headingSmall.copyWith(
@@ -126,11 +144,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-
                         GridView.count(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                          crossAxisCount:
+                              MediaQuery.of(context).size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                           childAspectRatio: 0.95,
@@ -148,6 +166,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 subtitle: 'Register events',
                                 icon: Icons.event_rounded,
                                 onTap: _openEventRegistrationScreen,
+                              ),
+                            if (isCommittee)
+                              _buildDashboardTile(
+                                title: 'Announcements',
+                                subtitle: 'Manage updates',
+                                icon: Icons.campaign_rounded,
+                                onTap: _openAnnouncementManagementScreen,
                               ),
                             _buildDashboardTile(
                               title: 'QR Code',
@@ -262,7 +287,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   right: -2,
                   top: -2,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryRed,
                       borderRadius: BorderRadius.circular(12),
@@ -435,7 +461,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _sectionTitle(
             title: 'Upcoming Events',
             actionText: isCommittee ? 'Manage' : 'View all',
-            onTap: isCommittee ? _openEventManagementScreen : _openEventRegistrationScreen,
+            onTap: isCommittee
+                ? _openEventManagementScreen
+                : _openEventRegistrationScreen,
           ),
           const SizedBox(height: 16),
           if (events.isEmpty)
@@ -495,19 +523,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAnnouncementSection(bool isCommittee) {
-    final announcements = isCommittee
-        ? [
-            'Remember to update event details before publishing.',
-            'Check QR attendance sessions after each event.',
-            'Review upcoming activities for this week.',
-          ]
-        : [
-            'New events may be available for registration.',
-            'Use QR Code to scan attendance during events.',
-            'Check your registered events before attending.',
-          ];
-
+  Widget _buildAnnouncementSection(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> announcements,
+    bool isCommittee, {
+    required bool isLoading,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -515,32 +535,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle(title: 'Announcements & Updates'),
-          const SizedBox(height: 14),
-          ...announcements.map(
-            (text) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.campaign_rounded,
-                    size: 20,
-                    color: AppTheme.primaryRed,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      text,
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _sectionTitle(
+            title: 'Announcements & Updates',
+            actionText: isCommittee ? 'Manage' : null,
+            onTap: isCommittee ? _openAnnouncementManagementScreen : null,
           ),
+          const SizedBox(height: 14),
+          if (isLoading && announcements.isEmpty)
+            const Center(child: CircularProgressIndicator())
+          else if (announcements.isEmpty)
+            Text(
+              isCommittee
+                  ? 'No published announcements yet. Create one to update members.'
+                  : 'No announcements available right now.',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            )
+          else
+            ...announcements.map(
+              (doc) {
+                final data = doc.data();
+                final title =
+                    (data['title'] ?? 'Untitled Announcement').toString();
+                final message = (data['message'] ?? '').toString();
+                final timestamp = data['createdAt'];
+                final date = timestamp is Timestamp
+                    ? _formatDate(timestamp.toDate())
+                    : null;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryRed.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.campaign_rounded,
+                        size: 22,
+                        color: AppTheme.primaryRed,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(title, style: AppTheme.headingSmall),
+                            if (message.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                message,
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                            if (date != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                date,
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -578,8 +648,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
 
     final hour = date.hour.toString().padLeft(2, '0');
@@ -658,7 +738,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             break;
           case 'accessibility':
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AccessibilitySettingsScreen()),
+              MaterialPageRoute(
+                  builder: (_) => const AccessibilitySettingsScreen()),
             );
             break;
           case 'logout':
@@ -706,6 +787,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _openEventManagementScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const EventManagementScreen()),
+    );
+  }
+
+  void _openAnnouncementManagementScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AnnouncementManagementScreen()),
     );
   }
 
