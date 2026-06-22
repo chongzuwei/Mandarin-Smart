@@ -349,7 +349,7 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                   Icons.more_vert_rounded,
                   color: AppTheme.textSecondary.withValues(alpha: 0.9),
                 ),
-                color: AppTheme.bgDark,
+                color: AppTheme.surfaceLight,
                 onSelected: (value) {
                   if (value == 'edit') {
                     _openEditEventForm(eventId, data);
@@ -517,7 +517,11 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.bgDark,
+        backgroundColor: AppTheme.surfaceLight,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          side: BorderSide(color: AppTheme.dividerColor.withValues(alpha: 0.8)),
+        ),
         title: Text(
           'Delete event',
           style: AppTheme.headingMedium.copyWith(color: AppTheme.textPrimary),
@@ -621,7 +625,11 @@ class _EventFormDialogState extends State<_EventFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: AppTheme.surfaceLight,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        side: BorderSide(color: AppTheme.dividerColor.withValues(alpha: 0.8)),
+      ),
       title: Text(
         widget.existingData == null ? 'Create event' : 'Edit event',
         style: AppTheme.headingMedium.copyWith(color: AppTheme.textPrimary),
@@ -648,10 +656,11 @@ class _EventFormDialogState extends State<_EventFormDialog> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppTheme.surfaceLightAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  border: Border.all(
+                    color: AppTheme.dividerColor.withValues(alpha: 0.9),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,14 +717,16 @@ class _EventFormDialogState extends State<_EventFormDialog> {
         labelText: label,
         labelStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
+        fillColor: AppTheme.surfaceLightAlt,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          borderSide: BorderSide(
+            color: AppTheme.dividerColor.withValues(alpha: 0.9),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
