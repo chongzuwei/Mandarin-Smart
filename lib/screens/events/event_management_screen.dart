@@ -34,7 +34,9 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
           child: FutureBuilder<Map<String, dynamic>?>(
             future: _profileFuture,
             builder: (context, profileSnapshot) {
-              final role = (profileSnapshot.data?['role'] ?? '').toString().toLowerCase();
+              final role = (profileSnapshot.data?['role'] ?? '')
+                  .toString()
+                  .toLowerCase();
               final isCommittee = role == 'committee';
 
               if (profileSnapshot.connectionState == ConnectionState.waiting) {
@@ -54,7 +56,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                       decoration: BoxDecoration(
                         gradient: AppTheme.cardGradient,
                         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08)),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -112,7 +115,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                                 Material(
                                   color: Colors.transparent,
                                   child: InkWell(
-                                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                    borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusFull),
                                     onTap: () => Navigator.of(context).pop(),
                                     child: const Padding(
                                       padding: EdgeInsets.all(8),
@@ -143,10 +147,13 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                             const SizedBox(height: 24),
                             _buildSummaryCard(docs.length),
                             const SizedBox(height: 20),
-                            if (eventSnapshot.connectionState == ConnectionState.waiting && docs.isEmpty)
+                            if (eventSnapshot.connectionState ==
+                                    ConnectionState.waiting &&
+                                docs.isEmpty)
                               const Center(
                                 child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                                 ),
                               )
                             else if (docs.isEmpty)
@@ -170,22 +177,26 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
                               onTap: _openCreateEventForm,
                               child: Ink(
                                 decoration: BoxDecoration(
                                   gradient: AppTheme.primaryGradient,
-                                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusMd),
                                   boxShadow: AppTheme.primaryShadow,
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                                    const Icon(Icons.add_rounded,
+                                        color: Colors.white, size: 20),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Create Event',
-                                      style: AppTheme.buttonText.copyWith(color: Colors.white),
+                                      style: AppTheme.buttonText
+                                          .copyWith(color: Colors.white),
                                     ),
                                   ],
                                 ),
@@ -221,7 +232,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
               color: AppTheme.primaryRed.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             ),
-            child: const Icon(Icons.event_rounded, color: AppTheme.primaryRedLight, size: 28),
+            child: const Icon(Icons.event_rounded,
+                color: AppTheme.primaryRedLight, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -230,12 +242,14 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
               children: [
                 Text(
                   '$eventCount event${eventCount == 1 ? '' : 's'}',
-                  style: AppTheme.headingSmall.copyWith(color: AppTheme.textPrimary),
+                  style: AppTheme.headingSmall
+                      .copyWith(color: AppTheme.textPrimary),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Manage the event schedule used by attendance QR generation.',
-                  style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+                  style: AppTheme.bodySmall
+                      .copyWith(color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -277,11 +291,13 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
   }
 
   Widget _buildEventCard(String eventId, Map<String, dynamic> data) {
-    final title = (data['title'] ?? data['name'] ?? data['eventName'] ?? 'Untitled Event')
-        .toString();
+    final title =
+        (data['title'] ?? data['name'] ?? data['eventName'] ?? 'Untitled Event')
+            .toString();
     final description = (data['description'] ?? '').toString();
     final location = (data['location'] ?? '').toString();
-    final creatorName = (data['creatorName'] ?? data['creatorEmail'] ?? 'Unknown').toString();
+    final creatorName =
+        (data['creatorName'] ?? data['creatorEmail'] ?? 'Unknown').toString();
     final eventDate = _readEventDate(data);
 
     return Container(
@@ -303,7 +319,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                   children: [
                     Text(
                       title,
-                      style: AppTheme.headingSmall.copyWith(color: AppTheme.textPrimary),
+                      style: AppTheme.headingSmall
+                          .copyWith(color: AppTheme.textPrimary),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -312,7 +329,9 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                       children: [
                         _buildChip(
                           icon: Icons.schedule_rounded,
-                          label: eventDate == null ? 'No date set' : _formatDateTime(eventDate),
+                          label: eventDate == null
+                              ? 'No date set'
+                              : _formatDateTime(eventDate),
                         ),
                         if (location.isNotEmpty)
                           _buildChip(
@@ -353,9 +372,11 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_rounded, size: 20, color: AppTheme.primaryRed),
+                        Icon(Icons.delete_rounded,
+                            size: 20, color: AppTheme.primaryRed),
                         SizedBox(width: 12),
-                        Text('Delete', style: TextStyle(color: AppTheme.primaryRed)),
+                        Text('Delete',
+                            style: TextStyle(color: AppTheme.primaryRed)),
                       ],
                     ),
                   ),
@@ -367,7 +388,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
             const SizedBox(height: 14),
             Text(
               description,
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+              style:
+                  AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
             ),
           ],
           const SizedBox(height: 14),
@@ -381,28 +403,38 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
   }
 
   Widget _buildChip({required IconData icon, required String label}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppTheme.primaryRedLight),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: AppTheme.bodySmall.copyWith(color: AppTheme.textPrimary),
-          ),
-        ],
+    final maxChipWidth = MediaQuery.of(context).size.width - 128;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxChipWidth),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: AppTheme.primaryRedLight),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodySmall.copyWith(color: AppTheme.textPrimary),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   DateTime? _readEventDate(Map<String, dynamic> data) {
-    final dynamic raw = data['startAt'] ?? data['eventDate'] ?? data['dateTime'];
+    final dynamic raw =
+        data['startAt'] ?? data['eventDate'] ?? data['dateTime'];
 
     if (raw is Timestamp) {
       return raw.toDate();
@@ -421,7 +453,20 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
 
   String _formatDateTime(DateTime dateTime) {
     final local = dateTime.toLocal();
-    final months = <String>['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = <String>[
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     final month = months[local.month - 1];
     final day = local.day.toString().padLeft(2, '0');
     final hour = local.hour.toString().padLeft(2, '0');
@@ -448,7 +493,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
     _showSnackBar(error, successMessage: 'Event created');
   }
 
-  Future<void> _openEditEventForm(String eventId, Map<String, dynamic> data) async {
+  Future<void> _openEditEventForm(
+      String eventId, Map<String, dynamic> data) async {
     final result = await showDialog<_EventFormResult>(
       context: context,
       builder: (context) => _EventFormDialog(existingData: data),
@@ -485,7 +531,8 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'Cancel',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryRedLight),
+              style:
+                  AppTheme.bodyMedium.copyWith(color: AppTheme.primaryRedLight),
             ),
           ),
           TextButton(
@@ -547,7 +594,10 @@ class _EventFormDialogState extends State<_EventFormDialog> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(
-      text: (widget.existingData?['title'] ?? widget.existingData?['name'] ?? widget.existingData?['eventName'] ?? '')
+      text: (widget.existingData?['title'] ??
+              widget.existingData?['name'] ??
+              widget.existingData?['eventName'] ??
+              '')
           .toString(),
     );
     _locationController = TextEditingController(
@@ -595,23 +645,27 @@ class _EventFormDialogState extends State<_EventFormDialog> {
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Event date and time',
-                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+                      style: AppTheme.bodySmall
+                          .copyWith(color: AppTheme.textSecondary),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _formatLocalDateTime(_selectedDateTime),
-                      style: AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimary),
+                      style: AppTheme.bodyMedium
+                          .copyWith(color: AppTheme.textPrimary),
                     ),
                   ],
                 ),
@@ -625,7 +679,8 @@ class _EventFormDialogState extends State<_EventFormDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
             'Cancel',
-            style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryRedLight),
+            style:
+                AppTheme.bodyMedium.copyWith(color: AppTheme.primaryRedLight),
           ),
         ),
         TextButton(
@@ -718,7 +773,8 @@ class _EventFormDialogState extends State<_EventFormDialog> {
   }
 
   DateTime? _readExistingDateTime(Map<String, dynamic>? data) {
-    final dynamic raw = data?['startAt'] ?? data?['eventDate'] ?? data?['dateTime'];
+    final dynamic raw =
+        data?['startAt'] ?? data?['eventDate'] ?? data?['dateTime'];
 
     if (raw is Timestamp) {
       return raw.toDate();

@@ -130,7 +130,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               MediaQuery.of(context).size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
-                          childAspectRatio: 0.95,
+                          childAspectRatio:
+                              MediaQuery.of(context).size.width > 600
+                                  ? 0.95
+                                  : 0.78,
                           children: [
                             if (isCommittee)
                               _buildDashboardTile(
@@ -242,11 +245,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return PopupMenuButton<String>(
           tooltip: 'Upcoming events',
           offset: const Offset(0, 52),
-          color: AppTheme.bgDark,
+          color: AppTheme.surfaceLight,
+          elevation: 12,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
             side: BorderSide(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: AppTheme.dividerColor.withValues(alpha: 0.9),
             ),
           ),
           itemBuilder: (context) => [
@@ -262,7 +266,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-            const PopupMenuDivider(),
+            PopupMenuDivider(
+              color: AppTheme.dividerColor.withValues(alpha: 0.8),
+            ),
             if (events.isEmpty)
               PopupMenuItem<String>(
                 enabled: false,
@@ -720,9 +726,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: onTap,
         child: Container(
           decoration: AppTheme.buildCardDecoration(borderRadius: 24),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
