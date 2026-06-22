@@ -13,6 +13,7 @@ import 'scan_qr_screen.dart';
 import 'events/event_management_screen.dart';
 import 'events/event_registration_screen.dart';
 import 'events/registered_events_screen.dart';
+import 'forum/forum_screen.dart';
 
 import 'accessibility_settings_screen.dart';
 
@@ -158,6 +159,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               onTap: isCommittee
                                   ? _openAttendanceQrScreen
                                   : _openScanQrScreen,
+                            ),
+                            _buildDashboardTile(
+                              title: 'Forum',
+                              subtitle: 'Discussions',
+                              icon: Icons.forum_rounded,
+                              onTap: _openForumScreen,
                             ),
                             _buildDashboardTile(
                               title: 'Profile',
@@ -843,6 +850,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _openRegisteredEventsScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const RegisteredEventsScreen()),
+    );
+  }
+
+  void _openForumScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ForumScreen()),
     );
   }
 }
